@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Number Detective</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+:root{
+  color-scheme: light dark;
+  --paper:#E9EEF2; --card:#F8FAFB; --ink:#16253A; --muted:#50607A; --line:#BAC7D3;
+  --tint:#DCE4EB; --red:#BD2F28; --green:#1F7656; --accent:#E2B23A; --accent-soft:#F6E4AE;
+  --btn-bg:#16253A; --btn-fg:#F4F7FA;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#0E1928; --card:#162536; --ink:#E7EEF5; --muted:#9DAFC4; --line:#2B3E55;
+    --tint:#1F3248; --red:#F0675D; --green:#58C79C; --accent:#F0C25A; --accent-soft:#4A3E1B;
+    --btn-bg:#E7EEF5; --btn-fg:#0E1928;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#0E1928; --card:#162536; --ink:#E7EEF5; --muted:#9DAFC4; --line:#2B3E55;
+  --tint:#1F3248; --red:#F0675D; --green:#58C79C; --accent:#F0C25A; --accent-soft:#4A3E1B;
+  --btn-bg:#E7EEF5; --btn-fg:#0E1928;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:17px;line-height:1.5}
+.type{font-family:"Special Elite","Courier New",Courier,monospace}
+.wrap{max-width:1080px;margin:0 auto;padding:20px 18px 48px}
+h1,h2{font-family:"Special Elite","Courier New",Courier,monospace;font-weight:400;margin:0}
+h1{font-size:clamp(2.5rem,8vw,4.4rem);line-height:1.05;letter-spacing:-.01em}
+h2{font-size:1.3rem}
+p{margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Home */
+.hero{padding:36px 0 26px;max-width:40rem}
+.lead{margin-top:18px;font-size:1.15rem;max-width:34rem}
+.redact{display:inline-block;background:var(--ink);color:var(--ink);border-radius:2px;padding:0 .35em;user-select:none}
+.how{margin:26px 0 8px;padding:0;list-style:none;display:grid;gap:8px;max-width:34rem;color:var(--muted)}
+.how li{padding-left:1.1em;position:relative}
+.how li::before{content:"";position:absolute;left:0;top:.62em;width:.5em;height:2px;background:var(--red)}
+.levels{display:grid;gap:14px;margin-top:22px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.level{text-align:left;background:var(--card);border:1.5px solid var(--ink);border-radius:4px;padding:16px 16px 14px;cursor:pointer;display:grid;gap:6px;align-content:start;transition:transform .12s ease,box-shadow .12s ease}
+.level:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.level .name{font-family:"Special Elite","Courier New",monospace;font-size:1.35rem}
+.level .range{color:var(--muted);font-size:.95rem}
+.level .stars{color:var(--accent);font-size:1.1rem;letter-spacing:.1em}
+.level .stars .off{color:var(--line)}
+
+/* Case */
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.link{background:none;border:none;padding:6px 0;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.auto{display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--muted)}
+.auto input{width:18px;height:18px;accent-color:var(--ink)}
+.stats{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:18px}
+.stat{display:grid}
+.stat b{font-family:"Special Elite","Courier New",monospace;font-weight:400;font-size:1.7rem;line-height:1.1}
+.stat span{color:var(--muted);font-size:.92rem}
+.case{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:900px){.case{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start}}
+.side{display:grid;gap:18px}
+.sheet{background:var(--card);border:1.5px solid var(--ink);border-radius:4px;padding:16px}
+.sheet-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.meta{color:var(--muted);font-size:.95rem}
+.hint{color:var(--muted);font-size:.95rem;margin-bottom:12px}
+
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px}
+.board.big{grid-template-columns:repeat(auto-fill,minmax(40px,1fr))}
+.cell{font-family:"Special Elite","Courier New",monospace;font-size:1rem;min-height:42px;background:var(--paper);border:1px solid var(--line);border-radius:3px;cursor:pointer;padding:0}
+.cell:hover{border-color:var(--ink)}
+.cell.x{color:var(--muted);background:var(--tint);text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:2px}
+.cell.target{outline:3px solid var(--accent);background:var(--accent-soft);color:var(--ink);text-decoration:none}
+.cell.wrong{border-color:var(--red)}
+.board.locked .cell{cursor:default}
+
+.field{display:grid;gap:4px;margin-bottom:10px}
+.field label,.p span{color:var(--muted);font-size:.95rem}
+select,input[type=number]{background:var(--paper);border:1.5px solid var(--line);border-radius:3px;padding:9px 10px;width:100%;min-height:44px}
+select:focus,input[type=number]:focus{border-color:var(--ink)}
+.params{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.p{display:grid;gap:4px;flex:1 1 110px}
+.preview{font-family:"Special Elite","Courier New",monospace;font-size:1.1rem;margin:8px 0 12px;min-height:1.6em}
+.btn{border:1.5px solid var(--ink);border-radius:3px;padding:10px 16px;min-height:44px;cursor:pointer;background:var(--card);font-weight:700}
+.btn.primary{background:var(--btn-bg);color:var(--btn-fg)}
+.btn.danger{background:var(--red);border-color:var(--red);color:#fff}
+.btn:hover{filter:brightness(1.08)}
+.msg{min-height:1.5em;margin-top:10px;font-size:.98rem}
+.msg.bad{color:var(--red)}
+.accuse{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.accuse .field{margin:0;flex:1 1 140px}
+.strikes{margin-top:10px;color:var(--muted)}
+.strikes .on{color:var(--red)}
+
+.log{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.log li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.log .q{font-family:"Special Elite","Courier New",monospace}
+.stamp{font-family:"Special Elite","Courier New",monospace;border:2px solid currentColor;border-radius:3px;padding:0 10px;transform:rotate(-5deg);flex:none;font-size:1.05rem}
+.stamp.yes{color:var(--green)}
+.stamp.no{color:var(--red)}
+.log li.new .stamp{animation:thud .28s ease-out}
+@keyframes thud{from{transform:rotate(-5deg) scale(1.9);opacity:0}to{transform:rotate(-5deg) scale(1);opacity:1}}
+.empty{color:var(--muted)}
+
+.verdict{font-size:1.9rem;line-height:1.15;margin-bottom:6px}
+.starline{font-size:1.5rem;color:var(--accent);letter-spacing:.12em;margin:4px 0 8px}
+.starline .off{color:var(--line)}
+.review{list-style:none;margin:12px 0;padding:0;display:grid;gap:6px}
+.review li{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.review .left{color:var(--muted);white-space:nowrap}
+.review .waste{color:var(--red)}
+.tip{margin:12px 0;padding:10px 12px;background:var(--tint);border-left:4px solid var(--accent)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion: reduce){
+  .log li.new .stamp{animation:none}
+  .level{transition:none}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+  "use strict";
+
+  var LEVELS=[
+    {id:"rookie",name:"Rookie",max:30,types:["even","multiple","greater","between"],blurb:"Odd or even, multiples, bigger or smaller."},
+    {id:"detective",name:"Detective",max:60,types:["even","multiple","greater","between","prime","square","contains"],blurb:"Adds primes, square numbers and digit clues."},
+    {id:"inspector",name:"Inspector",max:100,types:["even","multiple","greater","between","prime","square","contains","digitsum"],blurb:"A bigger crowd, plus digit-sum clues."},
+    {id:"chief",name:"Chief",max:200,types:["even","multiple","greater","between","prime","square","contains","digitsum"],blurb:"Two hundred suspects. Every question has to count."}
+  ];
+
+  function isPrime(n){if(n<2)return false;for(var i=2;i*i<=n;i++){if(n%i===0)return false;}return true;}
+  function digitSum(n){return String(n).split("").reduce(function(s,d){return s+Number(d);},0);}
+  function v(x){return (x===""||x===undefined||x===null)?"…":x;}
+
+  var QT={
+    even:{label:"Even or odd?",params:[],
+      test:function(x){return x%2===0;},
+      text:function(){return "Is it an even number?";}},
+    multiple:{label:"Multiple of…",params:[{k:"a",label:"a multiple of",min:2,max:12,def:function(){return 3;}}],
+      test:function(x,q){return x%q.a===0;},
+      text:function(q){return "Is it a multiple of "+v(q.a)+"?";}},
+    greater:{label:"Greater than…",params:[{k:"a",label:"greater than",min:1,max:"max-1",def:function(m){return Math.floor(m/2);}}],
+      test:function(x,q){return x>q.a;},
+      text:function(q){return "Is it greater than "+v(q.a)+"?";}},
+    between:{label:"Between two numbers…",params:[
+        {k:"a",label:"between",min:1,max:"max",def:function(){return 1;}},
+        {k:"b",label:"and",min:1,max:"max",def:function(m){return Math.floor(m/2);}}],
+      test:function(x,q){return x>=q.a&&x<=q.b;},
+      text:function(q){return "Is it between "+v(q.a)+" and "+v(q.b)+" (including both)?";}},
+    prime:{label:"Prime number?",params:[],
+      test:function(x){return isPrime(x);},
+      text:function(){return "Is it a prime number?";}},
+    square:{label:"Perfect square?",params:[],
+      test:function(x){var r=Math.round(Math.sqrt(x));return r*r===x;},
+      text:function(){return "Is it a perfect square?";}},
+    contains:{label:"Contains the digit…",params:[{k:"a",label:"the digit",min:0,max:9,def:function(){return 7;}}],
+      test:function(x,q){return String(x).indexOf(String(q.a))!==-1;},
+      text:function(q){return "Does it contain the digit "+v(q.a)+"?";}},
+    digitsum:{label:"Digit sum equals…",params:[{k:"a",label:"digits add up to",min:1,max:19,def:function(){return 9;}}],
+      test:function(x,q){return digitSum(x)===q.a;},
+      text:function(q){return "Do its digits add up to "+v(q.a)+"?";}}
+  };
+
+  var app=document.getElementById("app");
+  var S={screen:"home",level:null,target:0,hist:[],crossed:new Set(),wrongs:[],moves:0,over:null,auto:false,caseNo:0,fresh:false};
+
+  function $(sel){return document.querySelector(sel);}
+  function lv(){return LEVELS.filter(function(l){return l.id===S.level;})[0];}
+  function par(max){return Math.ceil(Math.log(max)/Math.LN2);}
+  function consistent(x,hist){return hist.every(function(h){return QT[h.q.type].test(x,h.q)===h.ans;});}
+  function candidates(hist){
+    var out=[],m=lv().max;
+    for(var i=1;i<=m;i++){if(consistent(i,hist))out.push(i);}
+    return out;
+  }
+  function movesUsed(){return S.hist.length+2*S.wrongs.length;}
+
+  /* Persistence for best stars, per viewer */
+  function loadBest(){try{return JSON.parse(localStorage.getItem("numberDetectiveBest")||"{}")||{};}catch(e){return {};}}
+  function saveBest(id,stars){
+    try{var b=loadBest();if(!b[id]||b[id]<stars){b[id]=stars;localStorage.setItem("numberDetectiveBest",JSON.stringify(b));}}catch(e){}
+  }
+  function starHtml(n,cls){
+    var s="";for(var i=1;i<=3;i++){s+=(i<=n?"★":"<span class=\"off\">★</span>");}
+    return "<span class=\""+cls+"\" aria-label=\""+n+" of 3 stars\">"+s+"</span>";
+  }
+
+  /* Home */
+  function home(){
+    S.screen="home";
+    var best=loadBest();
+    app.innerHTML=
+      "<main class=\"wrap\">"+
+      "<header class=\"hero\">"+
+        "<h1>Number Detective</h1>"+
+        "<p class=\"lead\">Someone is hiding a number. You can’t ask what it is, only yes-or-no questions about it. The number is <span class=\"redact\" aria-label=\"hidden\">forty</span>, and no, you didn’t see that.</p>"+
+        "<ul class=\"how\">"+
+          "<li>Ask questions to learn about the number.</li>"+
+          "<li>Cross suspects off the board as the answers come in.</li>"+
+          "<li>Name the number. Fewer questions earn more stars.</li>"+
+        "</ul>"+
+      "</header>"+
+      "<h2>Choose a case</h2>"+
+      "<div class=\"levels\">"+
+      LEVELS.map(function(l){
+        return "<button class=\"level\" data-act=\"start\" data-id=\""+l.id+"\">"+
+          "<span class=\"name\">"+l.name+"</span>"+
+          "<span class=\"range\">Numbers 1 to "+l.max+"</span>"+
+          "<span>"+l.blurb+"</span>"+
+          (best[l.id]?starHtml(best[l.id],"stars"):"<span class=\"range\">No stars yet</span>")+
+        "</button>";
+      }).join("")+
+      "</div></main>";
+  }
+
+  /* Start a case */
+  function start(id,keepAuto){
+    S.level=id;
+    var L=lv();
+    S.target=Math.floor(Math.random()*L.max)+1;
+    S.hist=[];S.crossed=new Set();S.wrongs=[];S.over=null;S.fresh=false;
+    S.caseNo=(S.caseNo||0)+1;
+    if(!keepAuto){S.auto=(id==="rookie");}
+    caseView();
+  }
+
+  function caseView(){
+    S.screen="case";
+    var L=lv();
+    app.innerHTML=
+      "<main class=\"wrap\">"+
+      "<div class=\"topbar\">"+
+        "<button class=\"link\" data-act=\"home\">Back to cases</button>"+
+        "<label class=\"auto\"><input type=\"checkbox\" id=\"auto\""+(S.auto?" checked":"")+"> Cross off suspects for me</label>"+
+      "</div>"+
+      "<div class=\"stats\" aria-live=\"polite\">"+
+        "<div class=\"stat\"><b id=\"sCase\">"+S.caseNo+"</b><span>"+L.name+" case</span></div>"+
+        "<div class=\"stat\"><b id=\"sMoves\">0</b><span>moves used</span></div>"+
+        "<div class=\"stat\"><b>"+par(L.max)+"</b><span>par questions</span></div>"+
+      "</div>"+
+      "<div class=\"case\">"+
+        "<section class=\"sheet\" aria-labelledby=\"bh\">"+
+          "<div class=\"sheet-head\"><h2 id=\"bh\">Suspect board</h2><p class=\"meta\" id=\"remain\"></p></div>"+
+          "<p class=\"hint\" id=\"boardHint\">Tap a number to cross it off. Tap again to bring it back.</p>"+
+          "<div id=\"board\" class=\"board"+(L.max>100?" big":"")+"\" role=\"group\" aria-label=\"Numbers 1 to "+L.max+"\"></div>"+
+        "</section>"+
+        "<div class=\"side\">"+
+          "<section class=\"sheet\" id=\"askSheet\" aria-labelledby=\"ah\">"+
+            "<div class=\"sheet-head\"><h2 id=\"ah\">Question the informant</h2></div>"+
+            "<div class=\"field\"><label for=\"qtype\">Kind of question</label>"+
+              "<select id=\"qtype\">"+
+              L.types.map(function(t){return "<option value=\""+t+"\">"+QT[t].label+"</option>";}).join("")+
+              "</select></div>"+
+            "<div class=\"params\" id=\"params\"></div>"+
+            "<p class=\"preview\" id=\"preview\"></p>"+
+            "<button class=\"btn primary\" data-act=\"ask\">Ask this question</button>"+
+            "<p class=\"msg\" id=\"msg\" role=\"status\" aria-live=\"polite\"></p>"+
+          "</section>"+
+          "<section class=\"sheet\" id=\"accSheet\" aria-labelledby=\"nh\">"+
+            "<div class=\"sheet-head\"><h2 id=\"nh\">Name the number</h2></div>"+
+            "<div class=\"accuse\">"+
+              "<div class=\"field\"><label for=\"acc\">The number is</label>"+
+              "<input id=\"acc\" type=\"number\" inputmode=\"numeric\" min=\"1\" max=\""+L.max+"\"></div>"+
+              "<button class=\"btn danger\" data-act=\"accuse\">Accuse</button>"+
+            "</div>"+
+            "<p class=\"strikes\" id=\"strikes\"></p>"+
+            "<p class=\"msg\" id=\"accMsg\" role=\"status\" aria-live=\"polite\"></p>"+
+          "</section>"+
+          "<section class=\"sheet\" id=\"debrief\" aria-live=\"polite\" hidden></section>"+
+          "<section class=\"sheet\" aria-labelledby=\"th\">"+
+            "<div class=\"sheet-head\"><h2 id=\"th\">Testimony</h2></div>"+
+            "<ol class=\"log\" id=\"log\"></ol>"+
+          "</section>"+
+        "</div>"+
+      "</div></main>";
+    renderParams();
+    renderBoard();
+    renderLog();
+    renderStatus();
+  }
+
+  function renderParams(){
+    var L=lv(),t=QT[$("#qtype").value];
+    $("#params").innerHTML=t.params.map(function(p){
+      var max=p.max==="max"?L.max:(p.max==="max-1"?L.max-1:p.max);
+      return "<label class=\"p\"><span>"+p.label+"</span><input type=\"number\" inputmode=\"numeric\" id=\"p_"+p.k+"\" data-k=\""+p.k+"\" min=\""+p.min+"\" max=\""+max+"\" value=\""+p.def(L.max)+"\"></label>";
+    }).join("");
+    updatePreview();
+  }
+
+  function draftQuestion(){
+    var type=$("#qtype").value,q={type:type},bad=null;
+    QT[type].params.forEach(function(p){
+      var el=$("#p_"+p.k),raw=el?el.value:"";
+      q[p.k]=raw===""?"":Number(raw);
+    });
+    return q;
+  }
+  function updatePreview(){
+    var q=draftQuestion();
+    $("#preview").textContent=QT[q.type].text(q);
+  }
+  function validate(q){
+    var L=lv(),t=QT[q.type];
+    for(var i=0;i<t.params.length;i++){
+      var p=t.params[i],val=q[p.k];
+      var max=p.max==="max"?L.max:(p.max==="max-1"?L.max-1:p.max);
+      if(val===""||!isFinite(val)||Math.floor(val)!==val){return "Enter a whole number for “"+p.label+"”.";}
+      if(val<p.min||val>max){return "“"+p.label+"” needs a number from "+p.min+" to "+max+".";}
+    }
+    if(q.type==="between"&&q.a>q.b){return "The first number has to be smaller than the second.";}
+    return null;
+  }
+
+  function setMsg(id,text,bad){var el=$(id);if(!el)return;el.textContent=text;el.className="msg"+(bad?" bad":"");}
+
+  function ask(){
+    if(S.over)return;
+    var q=draftQuestion(),err=validate(q);
+    if(err){setMsg("#msg",err,true);return;}
+    var key=JSON.stringify(q);
+    if(S.hist.some(function(h){return JSON.stringify(h.q)===key;})){
+      setMsg("#msg","You already asked that one. Check the testimony below.",true);return;
+    }
+    var before=candidates(S.hist).length;
+    var ans=QT[q.type].test(S.target,q);
+    S.hist.push({q:q,ans:ans,before:before});
+    S.hist[S.hist.length-1].after=candidates(S.hist).length;
+    S.fresh=true;
+    if(S.auto)applyAuto();
+    setMsg("#msg","");
+    renderLog();renderBoard();renderStatus();
+  }
+
+  function applyAuto(){
+    var m=lv().max;
+    for(var i=1;i<=m;i++){if(!consistent(i,S.hist))S.crossed.add(i);}
+  }
+
+  function accuse(){
+    if(S.over)return;
+    var L=lv(),el=$("#acc"),raw=el.value,n=Number(raw);
+    if(raw===""||Math.floor(n)!==n||n<1||n>L.max){setMsg("#accMsg","Enter a whole number from 1 to "+L.max+".",true);return;}
+    if(S.wrongs.indexOf(n)!==-1){setMsg("#accMsg",n+" has already been cleared. Try someone else.",true);return;}
+    if(n===S.target){S.over="solved";finish();return;}
+    S.wrongs.push(n);
+    S.crossed.add(n);
+    el.value="";
+    if(S.wrongs.length>=3){S.over="cold";finish();return;}
+    setMsg("#accMsg",n+" is innocent. That costs 2 moves.",true);
+    renderBoard();renderStatus();
+  }
+
+  function stars(){
+    var m=movesUsed(),p=par(lv().max);
+    if(S.over!=="solved")return 0;
+    if(m<=p+2)return 3;
+    if(m<=p+5)return 2;
+    return 1;
+  }
+
+  function finish(){
+    var st=stars();
+    if(S.over==="solved")saveBest(S.level,st);
+    renderBoard();renderStatus();renderDebrief(st);
+    $("#askSheet").hidden=true;$("#accSheet").hidden=true;
+    $("#boardHint").textContent="The case is closed. The highlighted number was the one.";
+    var d=$("#debrief");d.hidden=false;
+    d.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"});
+    var b=d.querySelector("button");if(b)b.focus({preventScroll:true});
+  }
+
+  function renderDebrief(st){
+    var L=lv(),p=par(L.max),solved=S.over==="solved";
+    var wasted=S.hist.filter(function(h){return h.before===h.after;}).length;
+    var rows="<li><span>Before any questions</span><span class=\"left\">"+L.max+" suspects</span></li>"+
+      S.hist.map(function(h){
+        var same=h.before===h.after;
+        return "<li><span class=\""+(same?"waste":"")+"\">"+QT[h.q.type].text(h.q)+" "+(h.ans?"Yes.":"No.")+(same?" Nothing new.":"")+"</span><span class=\"left\">"+h.after+" left</span></li>";
+      }).join("");
+    var tip="";
+    if(solved&&st<3){
+      tip="<p class=\"tip\">The fastest questions split the remaining suspects roughly in half. “Is it greater than…?” with a number near the middle does that every time"+(wasted?", and "+wasted+" of your questions told you nothing new":"")+".</p>";
+    }else if(!solved){
+      tip="<p class=\"tip\">Three wrong names closes the case. Next time, keep asking until only a few suspects are left before you accuse anyone.</p>";
+    }else{
+      tip="<p class=\"tip\">Clean work. You kept pace with the best possible strategy.</p>";
+    }
+    $("#debrief").innerHTML=
+      "<p class=\"verdict type\">"+(solved?"Case closed.":"The case went cold.")+" It was "+S.target+".</p>"+
+      (solved?"<p class=\"starline\">"+starHtml(st,"")+"</p>":"")+
+      "<p class=\"meta\">"+S.hist.length+" question"+(S.hist.length===1?"":"s")+
+        (S.wrongs.length?" and "+S.wrongs.length+" wrong accusation"+(S.wrongs.length===1?"":"s")+" (2 moves each)":"")+
+        ". That’s "+movesUsed()+" moves against a par of "+p+".</p>"+
+      "<ul class=\"review\">"+rows+"</ul>"+tip+
+      "<div class=\"actions\">"+
+        "<button class=\"btn primary\" data-act=\"next\">Next case</button>"+
+        "<button class=\"btn\" data-act=\"home\">Change level</button>"+
+      "</div>";
+  }
+
+  function renderBoard(){
+    var L=lv(),h="";
+    for(var n=1;n<=L.max;n++){
+      var x=S.crossed.has(n),cls="cell"+(x?" x":"");
+      if(S.over&&n===S.target)cls="cell target";
+      else if(S.wrongs.indexOf(n)!==-1)cls+=" wrong";
+      h+="<button class=\""+cls+"\" data-n=\""+n+"\" aria-pressed=\""+x+"\" aria-label=\""+n+(x?", crossed off":"")+"\">"+n+"</button>";
+    }
+    var b=$("#board");b.innerHTML=h;
+    b.className="board"+(L.max>100?" big":"")+(S.over?" locked":"");
+  }
+
+  function toggleCell(btn){
+    if(S.over)return;
+    var n=Number(btn.getAttribute("data-n"));
+    if(S.crossed.has(n))S.crossed.delete(n);else S.crossed.add(n);
+    var x=S.crossed.has(n);
+    btn.classList.toggle("x",x);
+    btn.setAttribute("aria-pressed",x);
+    btn.setAttribute("aria-label",n+(x?", crossed off":""));
+    renderStatus();
+  }
+
+  function renderLog(){
+    var el=$("#log");
+    if(!S.hist.length){
+      el.innerHTML="<li class=\"empty\">No testimony yet. A good first question splits the suspects in half.</li>";return;
+    }
+    var last=S.hist.length-1;
+    el.innerHTML=S.hist.map(function(h,i){
+      return "<li class=\""+(S.fresh&&i===last?"new":"")+"\"><span class=\"q\">"+(i+1)+". "+QT[h.q.type].text(h.q)+"</span><span class=\"stamp "+(h.ans?"yes":"no")+"\">"+(h.ans?"Yes":"No")+"</span></li>";
+    }).reverse().join("");
+  }
+
+  function renderStatus(){
+    var L=lv();
+    $("#sMoves").textContent=movesUsed();
+    $("#remain").textContent=(L.max-S.crossed.size)+" suspects left on your board";
+    var s=$("#strikes");
+    if(s){
+      var h="Wrong accusations: ";
+      for(var i=0;i<3;i++){h+="<span class=\""+(i<S.wrongs.length?"on":"")+"\">"+(i<S.wrongs.length?"●":"○")+"</span> ";}
+      s.innerHTML=h+"<span>(three closes the case)</span>";
+    }
+  }
+
+  /* Events */
+  app.addEventListener("click",function(e){
+    var t=e.target.closest("[data-act],[data-n]");
+    if(!t)return;
+    var act=t.getAttribute("data-act");
+    if(t.hasAttribute("data-n")&&!act){toggleCell(t);return;}
+    if(act==="start")start(t.getAttribute("data-id"),false);
+    else if(act==="home")home();
+    else if(act==="ask")ask();
+    else if(act==="accuse")accuse();
+    else if(act==="next")start(S.level,true);
+  });
+  app.addEventListener("change",function(e){
+    if(e.target.id==="qtype"){renderParams();setMsg("#msg","");}
+    if(e.target.id==="auto"){
+      S.auto=e.target.checked;
+      if(S.auto&&S.hist.length){applyAuto();renderBoard();renderStatus();}
+    }
+  });
+  app.addEventListener("input",function(e){
+    if(e.target.closest("#params"))updatePreview();
+  });
+  app.addEventListener("keydown",function(e){
+    if(e.key!=="Enter")return;
+    if(e.target.closest("#params"))ask();
+    else if(e.target.id==="acc")accuse();
+  });
+
+  home();
+})();
+</script>
+</body>
+</html>
